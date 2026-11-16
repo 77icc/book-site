@@ -93,21 +93,27 @@ function render() {
       ? `<button class="delete-btn" data-action="delete-book" data-title="${escapeHtml(title)}">删除整本书</button>`
       : "";
     const reviewsHtml = items
-      .map(
-        (item) => `
+      .map((item) => {
+        const long = item.content.length > 100;
+        const contentHtml = long
+          ? `<p class="review-content">${escapeHtml(item.content.slice(0, 100))}…<span class="review-rest hidden">${escapeHtml(item.content.slice(100))}</span></p>
+             <button class="review-more" type="button" data-action="toggle-more">展开更多</button>`
+          : `<p class="review-content">${escapeHtml(item.content)}</p>`;
+
+        return `
         <div class="review">
           <div class="review-top">
             <span class="review-stars">${renderStars(item.rating)}</span>
             <span class="review-time">${escapeHtml(item.created_at)}</span>
           </div>
-          <p class="review-content">${escapeHtml(item.content)}</p>
+          ${contentHtml}
           ${
             adminPassword
               ? `<div class="review-actions"><button class="delete-btn" data-action="delete-review" data-id="${item.id}">删除这条</button></div>`
               : ""
           }
-        </div>`
-      )
+        </div>`;
+      })
       .join("");
 
     const repliesHtml = `
@@ -232,6 +238,14 @@ bookList.addEventListener("click", (event) => {
     form.querySelectorAll("[data-action='set-rating']").forEach((btn) => {
       btn.classList.toggle("active", Number(btn.dataset.value) <= value);
     });
+    return;
+  }
+
+  if (action.dataset.action === "toggle-more") {
+    const rest = action.previousElementSibling.querySelector(".review-rest");
+    const expanded = !rest.classList.contains("hidden");
+    rest.classList.toggle("hidden");
+    action.textContent = expanded ? "展开更多" : "收起";
     return;
   }
 
