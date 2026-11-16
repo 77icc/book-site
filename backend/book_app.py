@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import Flask, jsonify, request, send_from_directory
 
@@ -70,7 +70,7 @@ def add_review():
     if len(title) > 80 or len(content) > 2000:
         return jsonify({"error": "书名或内容过长"}), 400
 
-    created_at = datetime.now().strftime("%Y-%m-%d %H:%M")
+    created_at = (datetime.utcnow() + timedelta(hours=8)).strftime("%Y-%m-%d %H:%M")
     with get_db() as conn:
         cur = conn.execute(
             "INSERT INTO reviews (title, content, rating, created_at) VALUES (?, ?, ?, ?)",
