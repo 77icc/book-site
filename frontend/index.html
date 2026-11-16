@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>77icc book</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">77icc <span>book</span></div>
+    <div class="header-actions">
+      <span id="adminBadge" class="admin-badge hidden">管理员模式</span>
+      <button id="adminBtn" class="ghost-btn" type="button">管理员</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="compose">
+      <h2>写一条书评</h2>
+      <form id="reviewForm" autocomplete="off">
+        <div class="field">
+          <label for="titleInput">书名</label>
+          <input id="titleInput" type="text" maxlength="80" placeholder="例如：活着" required>
+        </div>
+
+        <div class="field">
+          <label>评分</label>
+          <div id="starPicker" class="star-picker" role="radiogroup" aria-label="评分"></div>
+        </div>
+
+        <div class="field">
+          <label for="contentInput">内容</label>
+          <textarea id="contentInput" rows="6" maxlength="2000" placeholder="写下你对这本书的评价……" required></textarea>
+        </div>
+
+        <button id="submitBtn" class="primary-btn" type="submit">提交评价</button>
+      </form>
+    </section>
+
+    <section class="list-section">
+      <div class="list-head">
+        <h2>全部书评</h2>
+        <span id="stats" class="stats"></span>
+      </div>
+      <div id="bookList" class="book-list"></div>
+      <p id="emptyState" class="empty hidden">还没有书评，来写第一条吧。</p>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <div id="adminModal" class="modal hidden">
+    <div class="modal-card">
+      <h3>管理员登录</h3>
+      <p class="modal-tip">输入密码后可删除单条评价或整本书。</p>
+      <input id="adminPassword" type="password" placeholder="请输入管理员密码">
+      <p id="adminError" class="error hidden">密码不正确</p>
+      <div class="modal-actions">
+        <button id="cancelAdmin" class="ghost-btn" type="button">取消</button>
+        <button id="loginBtn" class="primary-btn" type="button">登录</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
