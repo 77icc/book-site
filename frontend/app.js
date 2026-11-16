@@ -110,6 +110,26 @@ function render() {
       )
       .join("");
 
+    const repliesHtml = `
+      <div class="reply">
+        <button class="reply-toggle" type="button" data-action="toggle-reply">我也要写一点</button>
+        <form class="reply-form hidden" data-title="${escapeHtml(title)}" data-rating="5" autocomplete="off">
+          <div class="star-picker reply-stars">
+            ${[1, 2, 3, 4, 5]
+              .map(
+                (i) =>
+                  `<button type="button" class="active" data-action="set-rating" data-value="${i}" title="${i} 星">★</button>`
+              )
+              .join("")}
+          </div>
+          <textarea rows="3" maxlength="2000" placeholder="写下你对《${escapeHtml(title)}》的评价……" required></textarea>
+          <div class="reply-actions">
+            <button class="ghost-btn" type="button" data-action="cancel-reply">取消</button>
+            <button class="primary-btn" type="submit">提交评价</button>
+          </div>
+        </form>
+      </div>`;
+
     html += `
       <article class="book">
         <div class="book-head">
@@ -120,6 +140,7 @@ function render() {
           </div>
         </div>
         ${reviewsHtml}
+        ${repliesHtml}
       </article>`;
   });
 
@@ -187,7 +208,34 @@ async function adminDelete(payload) {
 }
 
 bookList.addEventListener("click", (event) => {
-  const btn = event.target.closest("button[data-action]");
+  const action = event.target.closest("[data-action]");
+  if (!action) return;
+
+  if (action.dataset.action === "toggle-reply") {
+    const form = action.parentElement.querySelector(".reply-form");
+    form.classList.toggle("hidden");
+    if (!form.classList.contains("hidden")) form.querySelector("textarea").focus();
+    return;
+  }
+
+  if (action.dataset.action === "cancel-reply") {
+    const form = action.closest(".reply-form");
+    form.classList.add("hidden");
+    form.querySelector("textarea").value = "";
+    return;
+  }
+
+  if (action.dataset.action === "set-rating") {
+    const form = action.closest(".reply-form");
+    const value = Number(action.dataset.value);
+    form.dataset.rating = String(value);
+    form.querySelectorAll("[data-action='set-rating']").forEach((btn) => {
+      btn.classList.toggle("active", Number(btn.dataset.value) <= value);
+    });
+    return;
+  }
+
+  const btn = action.closest("button[data-action]");
   if (!btn || !adminPassword) return;
 
   if (btn.dataset.action === "delete-review") {
@@ -198,6 +246,40 @@ bookList.addEventListener("click", (event) => {
   if (btn.dataset.action === "delete-book") {
     if (!confirm(`确定删除《${btn.dataset.title}》的全部评价吗？`)) return;
     adminDelete({ type: "book", title: btn.dataset.title });
+  }
+});
+
+bookList.addEventListener("submit", async (event) => {
+  const form = event.target.closest(".reply-form");
+  if (!form) return;
+  event.preventDefault();
+
+  const content = form.querySelector("textarea").value.trim();
+  if (!content) {
+    toast("请写下评价内容");
+    return;
+  }
+
+  const title = form.dataset.title;
+  const rating = Number(form.dataset.rating);
+  const submit = form.querySelector("button[type='submit']");
+  submit.disabled = true;
+
+  try {
+    const res = await fetch(`${API}/reviews`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, content, rating }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "提交失败");
+
+    reviews.unshift(data);
+    render();
+    toast("评价已提交");
+  } catch (err) {
+    toast(err.message || "提交失败");
+    submit.disabled = false;
   }
 });
 
